@@ -1,9 +1,11 @@
 import pygame as pg
 import os
 import sys
+import random
 
 from robot import Robot
 from arena import Arena
+from telemetry_plot import TelemetryPlots
 
 from size_constants import *
 
@@ -25,18 +27,24 @@ class App:
         self.arena = Arena()
         self.textsurface_1 = self.font.render('telemetry graphs go here', False, (255, 255, 255))
         self.screen.blit(self.arena.image, (0,0))
-
+        self.telemetry_plots = TelemetryPlots()
+        self.telemetry_plots.render_init(self.screen)
         #  self.telemetry_plots = TelemetryPlots()
 
     def update_robot_data(self):
         if FAKE:
-            x_spd_temp = 3
+            y_spd_temp = 3
 
-            self.robot.rect.move_ip(0,x_spd_temp)
+            self.robot.rect.move_ip(0,y_spd_temp)
             self.robot.angle += 2
             self.robot.update_sprite_angle() 
 
-            self.robot.velocity_x = (x_spd_temp/PIXELS_PER_TILE) / SPF
+            self.robot.velocity_y = (y_spd_temp/PIXELS_PER_TILE) / SPF
+
+            self.telemetry_plots.y_vel_plot.update_value(random.randint(1,3))
+
+    def render_plots(self):
+        self.telemetry_plots.render(self.screen)
 
     def erase(self):
         # eventually erase previous telemetry data here
@@ -45,6 +53,7 @@ class App:
     def render(self):
         self.robot.render(self.screen)
         self.screen.blit(self.textsurface_1,(900,100))
+        self.render_plots()
         pg.display.update()
 
     def event_loop(self):
