@@ -3,6 +3,7 @@ import os
 import sys
 import random
 import numpy as np
+import time
 
 from robot import Robot
 from arena import Arena
@@ -47,9 +48,9 @@ class App:
                 self.fake_y_vel += 0.1*max(abs(self.fake_y_vel),1) if self.robot.rect.top>3 else 5
             self.fake_x_vel += np.random.normal(scale=5)/10
             if self.robot.rect.centerx > 5*PIXELS_PER_TILE and self.fake_x_vel > 0:
-                self.fake_x_vel -= 0.1*max(abs(self.fake_x_vel),1) if self.robot.rect.right-self.arena.rect.right>3 else 20
+                self.fake_x_vel -= 0.1*max(abs(self.fake_x_vel),1) if self.robot.rect.right-self.arena.rect.right>3 else 5
             elif self.robot.rect.centerx < 1*PIXELS_PER_TILE and self.fake_x_vel < 0:
-                self.fake_x_vel += 0.1*max(abs(self.fake_x_vel),1) if self.robot.rect.left>3 else 10
+                self.fake_x_vel += 0.1*max(abs(self.fake_x_vel),1) if self.robot.rect.left>3 else 5
 
             self.robot.angle = np.degrees(np.tan(self.fake_x_vel/self.fake_y_vel))%360
             #  print(f'self.robot_angle: {self.robot.angle}')
@@ -83,6 +84,8 @@ class App:
     def event_loop(self):
         for event in pg.event.get():
             if event.type == pg.QUIT or self.keys[pg.K_ESCAPE]:
+                while(True):
+                    time.sleep(1)
                 sys.exit()
             elif event.type in (pg.KEYUP, pg.KEYDOWN):
                 self.keys = pg.key.get_pressed()
