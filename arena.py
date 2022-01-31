@@ -173,15 +173,16 @@ class CornerCircle(Segment):
         image.fill((0,0,0,0))
         pg.draw.line(image, NEAREST_DIST_LINE_COLOUR, pos, nearest, LINE_THICK)
 
-        arc_rect = pg.Rect(0,0,40,40)
-        arc_rect.center = pos
-        arc_angle = angle_between_positions(pos,nearest)
-        heading_angle_pg = angle_to_pg_angle(arc_angle)
+        desired_heading_arc_rect = pg.Rect(0,0,40,40)
+        desired_heading_arc_rect.center = pos
+        angle_of_desired_heading = angle_between_positions(pos,nearest)
+        robot.angle_error = (angle_of_desired_heading-robot.angle)%360
+        heading_angle_pg = angle_to_pg_angle(angle_of_desired_heading)
         robot_angle_pg = angle_to_pg_angle(robot.angle)
         start_angle = min(heading_angle_pg, robot_angle_pg)
         end_angle = max(heading_angle_pg, robot_angle_pg)
-        arc_rect.center = pos
-        pg.draw.arc(image,HEADING_ERROR_ARC_COLOUR,arc_rect,start_angle,end_angle,3)
+        desired_heading_arc_rect.center = pos
+        pg.draw.arc(image,HEADING_ERROR_ARC_COLOUR,desired_heading_arc_rect,start_angle,end_angle,3)
         return image
 
 
@@ -189,6 +190,7 @@ class Line(Segment):
     def __init__(self, start, end):
         self.start = [i*PIXELS_PER_TILE for i in start]
         self.end = [i*PIXELS_PER_TILE for i in end]
+        self.horizontal = self.start[0] == self.end[0]
 
     def render(self, surface):
         pg.draw.line(surface, LINE_COLOUR, self.start, self.end, LINE_THICK)
@@ -197,9 +199,12 @@ class Line(Segment):
         # im gonna just be lazy as shit and rely on the fact that the lines
         # are currently guaranteed to be horizontal or vertical to skip the grade 10 calculus
         # of calculating distance to an arbitrary line between (start) and (end)
-        if self.start[0] == self.end[0]:
+        if self.horizontal:
             # vertical line, distance is just x value
             return point[0]-start[0]
-        elif self.start[1] == self.end[1]:
+        else:
             # horizontal line, distance is y value
             return point[1]-start[1]
+
+    #  def nearest(self, point):
+        #  if 

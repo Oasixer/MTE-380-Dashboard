@@ -16,6 +16,7 @@ class Robot():
         self.rect = self.image.get_rect()
         self.rect.centerx = int(default_pos[0] * PIXELS_PER_TILE)
         self.rect.centery = int(default_pos[1] * PIXELS_PER_TILE)
+        self.angle_error = 0
         self.update_sprite_angle()
 
     def generate_image(self):

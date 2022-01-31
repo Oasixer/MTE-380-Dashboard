@@ -95,6 +95,8 @@ class App:
             print(f'pos_pixels: {pos_pixels}')
             self.robot.rect.center = pos_pixels
             self.robot.update_sprite_angle() 
+            self.telemetry_plots.angle_error.update_value(self.robot.angle_error)
+            self.telemetry_plots.robot_angle.update_value(self.robot.angle)
 
     def render_plots(self):
         self.telemetry_plots.render(self.screen)
