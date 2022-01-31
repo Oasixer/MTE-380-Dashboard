@@ -24,10 +24,10 @@ class App:
         self.clock = pg.time.Clock()
         self.screen = pg.display.get_surface()
         self.robot = Robot()
+        self.arena = Arena(self.robot)
         self.keys = pg.key.get_pressed()
         pg.font.init()
         self.font = pg.font.SysFont('Arial', 30)
-        self.arena = Arena()
         #  self.textsurface_1 = self.font.render('telemetry graphs go here', False, (255, 255, 255))
         self.screen.blit(self.arena.image, (0,0))
         self.telemetry_plots = TelemetryPlots()
@@ -70,7 +70,9 @@ class App:
 
             self.telemetry_plots.robot_angle.update_value(self.robot.angle)
         elif FAKE_STATIC:
-            if self.temp_ticks % 15 == 0:
+            if self.temp_ticks % 3 == 0:
+                self.robot.angle += 1
+            if self.temp_ticks % 100 == 0:
                 if self.temp_test_pos == (1,5.25):
                     self.temp_test_pos = (0.75,5)
                 elif self.temp_test_pos == (0.75,5):
@@ -99,13 +101,13 @@ class App:
 
     def erase(self):
         # eventually erase previous telemetry data here
-        self.robot.erase(self.screen, self.arena)
+        self.arena.erase(self.screen)
 
     def render(self):
         self.robot.render(self.screen)
         #  self.screen.blit(self.textsurface_1,(900,100))
         self.render_plots()
-        perp_line_image = self.arena.segments[1].generate_perp_line(self.robot.rect.center)
+        perp_line_image = self.arena.segments[1].generate_perp_line(self.robot)
         self.screen.blit(perp_line_image, (0,0))
         pg.display.update()
 

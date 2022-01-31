@@ -1,28 +1,43 @@
 import pygame as pg
+import numpy as np
 
 from size_constants import *
+ROBOT_COLOUR = (0,0,0,30)
+ROBOT_HEADING_COLOUR = (0,255,0)
+ROBOT_HEADING_ARC_COLOUR = (200,200,0)
+
 
 default_pos = (0.5,0.5)
 
-class Robot(pg.sprite.Sprite):
+class Robot():
     def __init__(self):
-        pg.sprite.Sprite.__init__(self)
-        self.sprite = pg.image.load('robit.png').convert_alpha()
-        self.rect = self.sprite.get_rect()
+        self.angle = 0
+        self.image = self.generate_image()
+        self.rect = self.image.get_rect()
         self.rect.centerx = int(default_pos[0] * PIXELS_PER_TILE)
         self.rect.centery = int(default_pos[1] * PIXELS_PER_TILE)
-        self.angle = 0
         self.update_sprite_angle()
 
-    def erase(self, screen, arena):
-        screen.blit(arena.image, (0,0))#area=self.angled_sprite.get_rect())
+    def generate_image(self):
+        image = pg.Surface((ROBOT_SIZE_PIXELS[0],ROBOT_SIZE_PIXELS[1])).convert_alpha()
+
+        image.fill(ROBOT_COLOUR)
+        rect = image.get_rect()
+        pg.draw.line(image, ROBOT_HEADING_COLOUR,
+                     rect.center, (rect.right, rect.centery),3)
+        return image
 
     def update_sprite_angle(self):
-        self.angled_sprite = pg.transform.rotate(self.sprite,
-                                        self.angle)
-        self.angled_rect = self.angled_sprite.get_rect()
+        self.angled_image = pg.transform.rotate(self.image,
+                                        -self.angle)
+        self.angled_rect = self.angled_image.get_rect()
+        arc_rect = pg.Rect(0,0,30,30)
+        arc_rect.center = self.angled_rect.center
+        start_angle = np.deg2rad(360-(self.angle%360))
+        end_angle = np.deg2rad(360)
+        pg.draw.arc(self.angled_image,ROBOT_HEADING_ARC_COLOUR,arc_rect,start_angle,end_angle,3)
         self.angled_rect.center = self.rect.center
 
     def render(self, screen):
-        screen.blit(self.angled_sprite, self.angled_rect)
+        screen.blit(self.angled_image, self.angled_rect)
 

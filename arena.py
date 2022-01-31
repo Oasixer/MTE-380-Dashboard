@@ -5,29 +5,37 @@ import math
 from size_constants import *
 from tile import Tile
 
+TILE_COLOUR_1 = (60,60,60)
+TILE_COLOUR_2 = (30,100,100)
+
+HEADING_ERROR_ARC_COLOUR = (100,200,255)
+
 LINE_COLOUR = (150,150,150)
 LINE_COLOUR2 = (150,150,0)
 NEAREST_DIST_LINE_COLOUR = (255,255,0)
 LINE_THICK=3
 
-class Arena(pg.sprite.Sprite):
-    def __init__(self):
-        pg.sprite.Sprite.__init__(self)
+class Arena():
+    def __init__(self, robot):
         self.rect = pg.Rect(0,0,ARENA_SIZE_PIXELS,ARENA_SIZE_PIXELS)
+        self.robot = robot
         self.tiles = self.generate_tiles()
         self.segments = self.generate_segments()
         
         self.image = self.generate_image()
 
+    def erase(self, screen):
+        screen.blit(self.image, (0,0))
+
 
     def generate_image(self):
         image = pg.Surface(self.rect.size).convert_alpha()
-        image.fill((0,255,0))
+        image.fill(TILE_COLOUR_1)
         rect = image.get_rect()
         for row in range(6):
             for col in range(6):
                 if row % 2 == col % 2:
-                    pg.draw.rect(image, (255,0,0), pg.Rect(col* PIXELS_PER_TILE, row * PIXELS_PER_TILE, PIXELS_PER_TILE, PIXELS_PER_TILE))
+                    pg.draw.rect(image, TILE_COLOUR_2, pg.Rect(col* PIXELS_PER_TILE, row * PIXELS_PER_TILE, PIXELS_PER_TILE, PIXELS_PER_TILE))
 
         for segment in self.segments:
             segment.render(image)
@@ -153,7 +161,8 @@ class CornerCircle(Segment):
     def render(self, screen):
         screen.blit(self.image, self.rect)
 
-    def generate_perp_line(self, pos):
+    def generate_perp_line(self, robot):
+        pos = robot.rect.center
         nearest = self.get_nearest(pos)
         nearest_line_width = abs(nearest[0]-self.circle_center[0])
         nearest_line_height = abs(nearest[1]-self.circle_center[1])
@@ -163,6 +172,16 @@ class CornerCircle(Segment):
 
         image.fill((0,0,0,0))
         pg.draw.line(image, NEAREST_DIST_LINE_COLOUR, pos, nearest, LINE_THICK)
+
+        arc_rect = pg.Rect(0,0,40,40)
+        arc_rect.center = pos
+        arc_angle = angle_between_positions(pos,nearest)
+        heading_angle_pg = angle_to_pg_angle(arc_angle)
+        robot_angle_pg = angle_to_pg_angle(robot.angle)
+        start_angle = min(heading_angle_pg, robot_angle_pg)
+        end_angle = max(heading_angle_pg, robot_angle_pg)
+        arc_rect.center = pos
+        pg.draw.arc(image,HEADING_ERROR_ARC_COLOUR,arc_rect,start_angle,end_angle,3)
         return image
 
 
