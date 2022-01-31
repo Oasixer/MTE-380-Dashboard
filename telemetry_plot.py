@@ -71,95 +71,99 @@ class TelemetryPlot:
         screen.blit(self.y_label_area_image, self.y_label_area_image_rect)
 
     def erase_update_render(self, screen):
-        if self.pixel_scale_factor is not None:
+        try:
+            if self.pixel_scale_factor is not None:
+                for i in range(len(self.values)):
+                    pass # erase broken rn
+                    breadth = self.display_scale_max-self.display_scale_min
+                    minn = self.display_scale_min-breadth*self.display_scale_pad
+                    dist_from_bot = self.values[-i]-minn
+                    scaled_dist_from_bot = int(dist_from_bot*self.pixel_scale_factor)
+                    height = self.rect.bottom-scaled_dist_from_bot
+                    pixel_pos = (self.rect.right-i,height)
+                    screen.set_at(pixel_pos, PLOT_BACKGROUND_COLOUR)
+
+            if self.new_value is not None:
+                self.values.append(self.new_value)
+                self.new_value = None
+            
+            new_min = min(self.values)
+            new_max = max(self.values)
+            breadth = new_max-new_min
+            new_min_for_display = new_min - breadth*self.display_scale_pad
+            new_max_for_display = new_max + breadth*self.display_scale_pad
+            new_min_for_ticks = new_min - breadth*self.display_tick_pad
+            new_max_for_ticks = new_max + breadth*self.display_tick_pad
+
+            if new_min != self.display_scale_min or new_max != self.display_scale_max:
+                new_fullscale = new_max_for_display-new_min_for_display
+                new_pixel_scale_factor = self.plot_size[1]/new_fullscale
+
+                #  print(f'new_min: {new_min}')
+                #  print(f'new_max: {new_max}')
+                first_tick = (math.ceil(new_min_for_ticks/self.tick_increment))*self.tick_increment
+
+                last_tick = (math.floor(new_max_for_ticks / self.tick_increment))*self.tick_increment
+                if self.ticks_since_last_rescale > MIN_TICKS_BETW_RESCALES:
+                    while (last_tick-first_tick)/self.tick_increment < DISPLAY_MIN_N_TICKS:
+                        self.tick_increment /= 2
+                        first_tick = (math.ceil(new_min_for_ticks/self.tick_increment))*self.tick_increment
+
+                        last_tick = (math.floor(new_max_for_ticks / self.tick_increment))*self.tick_increment
+                        self.ticks_since_last_rescale = 0
+
+                    while (last_tick-first_tick)/self.tick_increment > DISPLAY_MAX_N_TICKS:
+                        self.tick_increment *= 2
+                        first_tick = (math.ceil(new_min_for_ticks/self.tick_increment))*self.tick_increment
+
+                        last_tick = (math.floor(new_max_for_ticks/self.tick_increment))*self.tick_increment
+                        self.ticks_since_last_rescale = 0
+
+                new_tick = first_tick
+                new_ticks = {}
+                screen.blit(self.y_label_area_image, self.y_label_area_image_rect)
+                tick_breadth = last_tick-first_tick
+                n_ticks = tick_breadth/self.tick_increment
+                #  if n_ticks > DISPLAY_MAX_N_TICKS:
+                #  print(f'skip_by: {skip_by}')
+                while(new_tick) <= last_tick:
+                    new_tick_str = f'{new_tick:.5f}'
+                    print(f'new_tick_str: {new_tick_str}')
+                    try:
+                        new_ticks[new_tick_str] = self.ticks[new_tick]
+                    except KeyError:
+                        new_ticks[new_tick_str] = self.generate_tick(new_tick)
+
+                    new_tick_offset = (new_tick-new_min_for_display)*new_pixel_scale_factor+TICK_SIZE[1]/2
+                    new_tick_height = self.rect.bottom - new_tick_offset
+                    print(f'new - min: {new_tick-new_min_for_display}')
+                    print(f'scalefaac: {new_pixel_scale_factor}')
+                    print(f'offset: {new_tick_offset}')
+                    print(f'height: {new_tick_height}')
+                    screen.blit(new_ticks[new_tick_str], (self.rect.left,new_tick_height))
+                    new_tick += self.tick_increment
+
+                self.ticks = new_ticks
+                if (self.col == 1):
+                    print(self.ticks)
+                #  print(self.ticks)
+                self.pixel_scale_factor = new_pixel_scale_factor
+            self.display_scale_max = new_max
+            self.display_scale_min = new_min
+
             for i in range(len(self.values)):
-                pass # erase broken rn
-                breadth = self.display_scale_max-self.display_scale_min
                 minn = self.display_scale_min-breadth*self.display_scale_pad
                 dist_from_bot = self.values[-i]-minn
                 scaled_dist_from_bot = int(dist_from_bot*self.pixel_scale_factor)
                 height = self.rect.bottom-scaled_dist_from_bot
                 pixel_pos = (self.rect.right-i,height)
-                screen.set_at(pixel_pos, PLOT_BACKGROUND_COLOUR)
-
-        if self.new_value is not None:
-            self.values.append(self.new_value)
-            self.new_value = None
-        
-        new_min = min(self.values)
-        new_max = max(self.values)
-        breadth = new_max-new_min
-        new_min_for_display = new_min - breadth*self.display_scale_pad
-        new_max_for_display = new_max + breadth*self.display_scale_pad
-        new_min_for_ticks = new_min - breadth*self.display_tick_pad
-        new_max_for_ticks = new_max + breadth*self.display_tick_pad
-
-        if new_min != self.display_scale_min or new_max != self.display_scale_max:
-            new_fullscale = new_max_for_display-new_min_for_display
-            new_pixel_scale_factor = self.plot_size[1]/new_fullscale
-
-            print(f'new_min: {new_min}')
-            print(f'new_max: {new_max}')
-            first_tick = (math.ceil(new_min_for_ticks/self.tick_increment))*self.tick_increment
-
-            last_tick = (math.floor(new_max_for_ticks / self.tick_increment))*self.tick_increment
-            if self.ticks_since_last_rescale > MIN_TICKS_BETW_RESCALES:
-                while (last_tick-first_tick)/self.tick_increment < DISPLAY_MIN_N_TICKS:
-                    self.tick_increment /= 2
-                    first_tick = (math.ceil(new_min_for_ticks/self.tick_increment))*self.tick_increment
-
-                    last_tick = (math.floor(new_max_for_ticks / self.tick_increment))*self.tick_increment
-                    self.ticks_since_last_rescale = 0
-
-                while (last_tick-first_tick)/self.tick_increment > DISPLAY_MAX_N_TICKS:
-                    self.tick_increment *= 2
-                    first_tick = (math.ceil(new_min_for_ticks/self.tick_increment))*self.tick_increment
-
-                    last_tick = (math.floor(new_max_for_ticks/self.tick_increment))*self.tick_increment
-                    self.ticks_since_last_rescale = 0
-
-            new_tick = first_tick
-            new_ticks = {}
-            screen.blit(self.y_label_area_image, self.y_label_area_image_rect)
-            tick_breadth = last_tick-first_tick
-            n_ticks = tick_breadth/self.tick_increment
-            #  if n_ticks > DISPLAY_MAX_N_TICKS:
-            #  print(f'skip_by: {skip_by}')
-            while(new_tick) <= last_tick:
-                new_tick_str = f'{new_tick:.5f}'
-                print(f'new_tick_str: {new_tick_str}')
-                try:
-                    new_ticks[new_tick_str] = self.ticks[new_tick]
-                except KeyError:
-                    new_ticks[new_tick_str] = self.generate_tick(new_tick)
-
-                new_tick_offset = (new_tick-new_min_for_display)*new_pixel_scale_factor+TICK_SIZE[1]/2
-                new_tick_height = self.rect.bottom - new_tick_offset
-                print(f'new - min: {new_tick-new_min_for_display}')
-                print(f'scalefaac: {new_pixel_scale_factor}')
-                print(f'offset: {new_tick_offset}')
-                print(f'height: {new_tick_height}')
-                screen.blit(new_ticks[new_tick_str], (self.rect.left,new_tick_height))
-                new_tick += self.tick_increment
-
-            self.ticks = new_ticks
-            if (self.col == 1):
-                print(self.ticks)
-            #  print(self.ticks)
-            self.pixel_scale_factor = new_pixel_scale_factor
-        self.display_scale_max = new_max
-        self.display_scale_min = new_min
-
-        for i in range(len(self.values)):
-            minn = self.display_scale_min-breadth*self.display_scale_pad
-            dist_from_bot = self.values[-i]-minn
-            scaled_dist_from_bot = int(dist_from_bot*self.pixel_scale_factor)
-            height = self.rect.bottom-scaled_dist_from_bot
-            pixel_pos = (self.rect.right-i,height)
-            #  print(f'pixel_pos: {pixel_pos}')
-            #  print(f'self.rect: {self.rect}')
-            screen.set_at(pixel_pos,DATA_POINT_COLOUR)
-        self.ticks_since_last_rescale += 1
+                #  print(f'pixel_pos: {pixel_pos}')
+                #  print(f'self.rect: {self.rect}')
+                screen.set_at(pixel_pos,DATA_POINT_COLOUR)
+            self.ticks_since_last_rescale += 1
+        except Exception as e:
+            pass
+            #  print(f"ERROR UPDATING PLOTS: {e}")
 
 # (200,0,200)
         #  self.values.append()

@@ -12,12 +12,20 @@ from telemetry_plot import TelemetryPlots
 from size_constants import *
 
 # 720 x 720 @ 10 PIXELS_PER_INCH
-FPS = 30
+FPS = 60
 SPF = 1/FPS
 FAKE = False
-FAKE_STATIC = True
+FAKE_STATIC = False
+FAKE_TELEOP = True
+TELEOP_SPEED = 20
 
 CAPTION = "yo momma"
+
+DIRECTION_KEYS = {pg.K_a: (-1, 0),
+               pg.K_d: (1, 0),
+               pg.K_w: (0,-1),
+               pg.K_s: (0, 1)}
+ROTATION_KEYS = {'r': pg.K_e, 'l': pg.K_q}
 
 class App:
     def __init__(self):
@@ -30,14 +38,15 @@ class App:
         self.font = pg.font.SysFont('Arial', 30)
         #  self.textsurface_1 = self.font.render('telemetry graphs go here', False, (255, 255, 255))
         self.screen.blit(self.arena.image, (0,0))
-        self.telemetry_plots = TelemetryPlots()
-        self.telemetry_plots.render_init(self.screen)
         #  self.telemetry_plots = TelemetryPlots()
+        #  self.telemetry_plots.render_init(self.screen)
 
         self.fake_y_vel = 3 # fake data for plot testing
         self.fake_x_vel = 3
         self.temp_ticks = 0
         self.temp_test_pos = (1,5.25)
+
+        self.fake_commands = []
 
     def update_robot_data(self):
         if FAKE:
@@ -65,10 +74,10 @@ class App:
             self.robot.rect.move_ip(fake_x_vel_pixels,fake_y_vel_pixels)
             #  print(f'fake_x_vel_pixels: {fake_x_vel_pixels}')
             #  print(f'fake_y_vel_pixels: {fake_y_vel_pixels}')
-            self.telemetry_plots.y_vel.update_value(self.fake_y_vel)
-            self.telemetry_plots.x_vel.update_value(self.fake_x_vel)
+            #  self.telemetry_plots.y_vel.update_value(self.fake_y_vel)
+            #  self.telemetry_plots.x_vel.update_value(self.fake_x_vel)
 
-            self.telemetry_plots.robot_angle.update_value(self.robot.angle)
+            #  self.telemetry_plots.robot_angle.update_value(self.robot.angle)
         elif FAKE_STATIC:
             if self.temp_ticks % 3 == 0:
                 self.robot.angle += 1
@@ -94,12 +103,18 @@ class App:
             pos_pixels = tiles_to_pixels(pos)
             print(f'pos_pixels: {pos_pixels}')
             self.robot.rect.center = pos_pixels
-            self.robot.update_sprite_angle() 
-            self.telemetry_plots.angle_error.update_value(self.robot.angle_error)
-            self.telemetry_plots.robot_angle.update_value(self.robot.angle)
+
+        elif FAKE_TELEOP:
+            pass
+        #  self.telemetry_plots.angle_error.update_value(self.robot.angle_error)
+        #  self.telemetry_plots.robot_angle.update_value(self.robot.angle)
+        self.robot.update_sprite_angle() 
+
+        self.arena.update_active_segment()
 
     def render_plots(self):
-        self.telemetry_plots.render(self.screen)
+        pass
+        #  self.telemetry_plots.render(self.screen)
 
     def erase(self):
         # eventually erase previous telemetry data here
@@ -109,8 +124,9 @@ class App:
         self.robot.render(self.screen)
         #  self.screen.blit(self.textsurface_1,(900,100))
         self.render_plots()
-        perp_line_image = self.arena.segments[1].generate_perp_line(self.robot)
+        perp_line_image = self.arena.active.generate_desired_heading(self.robot)
         self.screen.blit(perp_line_image, (0,0))
+        self.arena.render_active(self.screen)
         pg.display.update()
 
     def event_loop(self):
@@ -121,6 +137,16 @@ class App:
                 sys.exit()
             elif event.type in (pg.KEYUP, pg.KEYDOWN):
                 self.keys = pg.key.get_pressed()
+                for k,v in DIRECTION_KEYS.items():
+                    if self.keys[k]:
+                        self.robot.rect.centerx += v[0]*TELEOP_SPEED
+                        self.robot.rect.centery += v[1]*TELEOP_SPEED
+
+                if self.keys[ROTATION_KEYS['l']]:
+                    self.robot.angle -= 15
+                if self.keys[ROTATION_KEYS['r']]:
+                    self.robot.angle += 15
+
 
     def main_loop(self):
         while(True):

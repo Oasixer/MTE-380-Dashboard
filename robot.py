@@ -4,14 +4,14 @@ import numpy as np
 from size_constants import *
 ROBOT_COLOUR = (0,0,0,30)
 ROBOT_HEADING_COLOUR = (0,255,0)
-ROBOT_HEADING_ARC_COLOUR = (200,200,0)
+ROBOT_HEADING_ARC_COLOUR = (200,0,200)
 
 
-default_pos = (0.5,0.5)
+default_pos = (3.5,5.5)
 
 class Robot():
     def __init__(self):
-        self.angle = 0
+        self.angle = 180
         self.image = self.generate_image()
         self.rect = self.image.get_rect()
         self.rect.centerx = int(default_pos[0] * PIXELS_PER_TILE)
