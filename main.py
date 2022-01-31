@@ -14,7 +14,8 @@ from size_constants import *
 # 720 x 720 @ 10 PIXELS_PER_INCH
 FPS = 30
 SPF = 1/FPS
-FAKE = True
+FAKE = False
+FAKE_STATIC = True
 
 CAPTION = "yo momma"
 
@@ -35,10 +36,11 @@ class App:
 
         self.fake_y_vel = 3 # fake data for plot testing
         self.fake_x_vel = 3
+        self.temp_ticks = 0
+        self.temp_test_pos = (1,5.25)
 
     def update_robot_data(self):
         if FAKE:
-
             clamp = lambda n, minn, maxn: max(min(maxn, n), minn)
             self.fake_y_vel = clamp(self.fake_y_vel+np.random.normal(scale=1)/10, -5, 5)
             self.fake_x_vel = clamp(self.fake_x_vel+np.random.normal(scale=1)/100, -5, 5)
@@ -67,6 +69,30 @@ class App:
             self.telemetry_plots.x_vel.update_value(self.fake_x_vel)
 
             self.telemetry_plots.robot_angle.update_value(self.robot.angle)
+        elif FAKE_STATIC:
+            if self.temp_ticks % 15 == 0:
+                if self.temp_test_pos == (1,5.25):
+                    self.temp_test_pos = (0.75,5)
+                elif self.temp_test_pos == (0.75,5):
+                    self.temp_test_pos = (0.85,5.25)
+                elif self.temp_test_pos == (0.85,5.25):
+                    self.temp_test_pos = (0.85,5.75)
+                elif self.temp_test_pos == (0.85,5.75):
+                    self.temp_test_pos = (0.3, 5.3)
+                elif self.temp_test_pos == (0.3, 5.3):
+                    self.temp_test_pos = (1.25, 5.2)
+                else:
+                    self.temp_test_pos = (1,5.25)
+            self.temp_ticks += 1
+
+            pos = self.temp_test_pos
+            #  pos = (1.25,2.75)
+            #  pos = (1,3.25)
+            #  pos = (1,3.25)
+            pos_pixels = tiles_to_pixels(pos)
+            print(f'pos_pixels: {pos_pixels}')
+            self.robot.rect.center = pos_pixels
+            self.robot.update_sprite_angle() 
 
     def render_plots(self):
         self.telemetry_plots.render(self.screen)
@@ -79,6 +105,8 @@ class App:
         self.robot.render(self.screen)
         #  self.screen.blit(self.textsurface_1,(900,100))
         self.render_plots()
+        perp_line_image = self.arena.segments[1].generate_perp_line(self.robot.rect.center)
+        self.screen.blit(perp_line_image, (0,0))
         pg.display.update()
 
     def event_loop(self):
