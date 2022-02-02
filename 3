@@ -11,7 +11,7 @@ DATA_POINT_COLOUR = (200,0,200) # where the actual data goes (inner)
 Y_LABEL_BACKGROUND_COLOUR = (0,200,60)
 TITLE_PAD = 40
 PAD = (TITLE_PAD, 0, 0, Y_LABEL_WIDTH)
-BACKGROUND_COLOUR = (100,100,120) # only shows up for TITLE!
+BACKGROUND_COLOUR = (40,40,80) # only shows up for TITLE!
 TITLE_COLOUR = (0,0,0)
 AXIS_LABEL_COLOUR = (25,25,25)
 AXIS_LABEL_FONTSIZE = 16
@@ -43,7 +43,6 @@ class TelemetryPlot:
         #  print(f'total_width: {total_width}')
         self.title_font = pg.font.SysFont('Arial', 30)
         self.axis_label_font = pg.font.SysFont('Arial', AXIS_LABEL_FONTSIZE)
-        self.values = deque([5,6,7],maxlen=DISPLAY_DATA_POINTS)
         self.plot_image = self.generate_plot_image()
         self.plot_image_rect = self.plot_image.get_rect()
         self.plot_image_rect.bottom = self.rect.bottom
@@ -53,6 +52,7 @@ class TelemetryPlot:
         self.y_label_area_image_rect = self.y_label_area_image.get_rect()
         self.y_label_area_image_rect.left = self.rect.left
         self.y_label_area_image_rect.bottom = self.rect.bottom
+        self.values = deque([5,6,7],maxlen=DISPLAY_DATA_POINTS)
         self.scale_factor = 1
         self.display_scale_min = min(self.values)
         self.display_scale_min = max(self.values)
@@ -115,20 +115,13 @@ class TelemetryPlot:
 
                 last_tick = (math.floor(new_max_for_ticks / self.tick_increment))*self.tick_increment
                 if self.ticks_since_last_rescale > MIN_TICKS_BETW_RESCALES:
-                    n=0
                     while (last_tick-first_tick)/self.tick_increment < DISPLAY_MIN_N_TICKS:
-                        if n>5:
-                            break
-                        n += 1
                         first_tick = (math.ceil(new_min_for_ticks/self.tick_increment))*self.tick_increment
 
                         last_tick = (math.floor(new_max_for_ticks / self.tick_increment))*self.tick_increment
                         self.ticks_since_last_rescale = 0
 
                     while (last_tick-first_tick)/self.tick_increment > DISPLAY_MAX_N_TICKS:
-                        if n>5:
-                            break
-                        n += 1
                         self.tick_increment *= 2
                         first_tick = (math.ceil(new_min_for_ticks/self.tick_increment))*self.tick_increment
 
@@ -204,7 +197,4 @@ class TelemetryPlot:
         image.fill(BACKGROUND_COLOUR)
         title_surf = self.title_font.render(self.title, False, TITLE_COLOUR)
         image.blit(title_surf,(0,5))
-        #  value_surf = self.title_font.render(f'{self.values[-1]:.4f}', False, TITLE_COLOUR)
-        #  width_of_val = value_surf.get_rect().width
-        #  image.blit(value_surf,(self.rect.width-width_of_val,5))
         return image

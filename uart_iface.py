@@ -59,7 +59,6 @@ class UartThread(threading.Thread):
                 if (self.device.in_waiting):
                     line = self.device.readline().decode().rstrip('\r\n')
                     self.decode_assign(line)
-                    #  print(line)
         else: # testing
             while(True):
                 for component_id, component_obj in self.data.mappings.items():
